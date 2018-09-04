@@ -61,6 +61,9 @@ def generateChain(bigram):
   return words
   """
 
-bigram = genPairs(prepareSentence(getSentence(sys.argv[1])))
-for x in range(10):
-  print(' '.join(generateChain(bigram)))
+if __name__ == "__main__":
+  if len(sys.argv) != 3:
+    raise ValueError("not enough values")
+  bigram = genPairs(prepareSentence(getSentence(sys.argv[1])))
+  for x in range(int(sys.argv[2])):
+    print(' '.join(generateChain(bigram)))
