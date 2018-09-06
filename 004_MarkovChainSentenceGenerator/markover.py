@@ -17,18 +17,6 @@ def genPairs(sentence):
         if not (x+1) >= len(sentence):
           generatedPairs[key].append(sentence[x+1])
   return generatedPairs
-  """
-  generatedPairs = []
-  generatedPairs.append((sentence.pop(-2),sentence.pop()))
-  while sentence:
-    x = sentence.pop()
-    if '.' in x:
-      generatedPairs.append((x[:-1], '.'))
-    else:
-      generatedPairs.append((x, generatedPairs[-1][0]))
-  generatedPairs.reverse()
-  return generatedPairs
-  """
 
 def prepareSentence(sentence):
   sym = ".,?!"
@@ -47,19 +35,6 @@ def generateChain(bigram):
       break
     words.append(random.choice(choices))
   return words
-  """
-  rand = random.choice(bigram)[0] 
-  words = [rand]
-  choices = [ x for x in bigram if x[0] == rand ]
-  words.append( random.choice(choices)[1] )
-  while choices:
-    rand = words[-1]
-    choices = [ x for x in bigram if x[0] == rand ]
-    if not choices:
-      break
-    words.append( random.choice(choices)[1] )
-  return words
-  """
 
 if __name__ == "__main__":
   if len(sys.argv) != 3:
