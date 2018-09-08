@@ -14,6 +14,7 @@ class Porter:
   def _checkPort(self, addr, prt):
     try:
       sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      sock.settimeout(3)
       result = sock.connect_ex((addr, prt))
       if result == 0:
         print(prt, "open")
@@ -29,11 +30,11 @@ class Porter:
 
 class Expander:
   def __init__(self, address, ports):
-    self.address = address
-    self.ports = ports
+    self.address = [address]
+    self.ports = [int(ports)]
 
   def giveBack(self):
-    return (["127.0.0.1"], [80])
+    return (self.address, self.ports)
 
 if __name__ == "__main__":
   exp = Expander(sys.argv[1], sys.argv[2])
