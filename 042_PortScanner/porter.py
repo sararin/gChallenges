@@ -6,6 +6,7 @@ class Porter:
   def __init__(self, addressPorts):
     self.address = addressPorts[0]
     self.ports = addressPorts[1]
+    print(self.ports)
 
   def runScan(self):
     for addr in self.address:
@@ -19,7 +20,8 @@ class Porter:
         result = sock.connect_ex((addr, prt))
         if result == 0:
           print(prt, "open")
-        sock.close()
+        else:
+          print(prt, "closed")
     except socket.gaierror:
       print("Hostname couldn't be resolved")
       sys.exit()
@@ -29,17 +31,23 @@ class Porter:
 
 class Expander:
   def __init__(self, address, ports):
-    self.address = [address]
+    self.address = address
     self.ports = ports
 
   def _expand(self, thingToExpand):
     if "-" in thingToExpand:
       temp = tuple(thingToExpand.split('-'))
       return list(range(int(temp[0]), int(temp[1])))
-    return thingToExpand
+    return (int(thingToExpand), int(thingToExpand)+1)
 
   def _prepareOutput(self):
     self.ports = self._expand(self.ports)
+    self.address = [self.address]
+    #temp = [x.split('-') if "-" in x else x for x in self.address.split('.')]
+    #first = [ x[0] if isinstance(x, list) else x for x in temp]
+    #last = [ x[1] if isinstance(x, list) else x for x in temp]
+    #self.address = (ipaddress.IPv4Address('.'.join(first)), ipaddress.IPv4Address('.'.join(last)))
+
 
   def giveBack(self):
     self._prepareOutput()
