@@ -1,18 +1,23 @@
 import sys
 import ipaddress
 import socket
+from threading import Thread
 
 class Porter:
   def __init__(self, addressPorts):
     self.address = addressPorts[0]
     self.ports = addressPorts[1]
+    self.threads = []
+    self.countOpen = {}
 
   def runScan(self):
     for addr in self.address:
       for prt in self.ports:
-        print(addr, end = ': ')
-        self._checkPort(addr, prt)
-        print()
+        t = Thread(target=self._checkPort, args=(addr, prt,))
+        self.threads.append(t)
+        t.start()
+    [x.join() for x in self.threads]
+    self._showResults()
 
   def _checkPort(self, addr, prt):
     try:
@@ -20,15 +25,25 @@ class Porter:
         sock.settimeout(3)
         result = sock.connect_ex((addr, prt))
         if result == 0:
-          print(prt, "open", end = '')
-        else:
-          print(prt, "closed", end = '')
+          self._addToOpenDict((addr, prt))
     except socket.gaierror:
       print("Hostname couldn't be resolved")
       sys.exit()
     except socket.error:
       print("Couldn't connect to server")
       sys.exit()
+
+  def _showResults(self):
+    for key, val in self.countOpen.items():
+      print(key+":", ' '.join(val))
+
+  def _addToOpenDict(self, addrprt):
+    addr, prt = addrprt
+    if not addr in self.countOpen:
+      self.countOpen[addr] = [str(prt)]
+    else:
+      self.countOpen[addr].append(str(prt))
+
 
 class Expander:
   def __init__(self, address, ports):
@@ -49,11 +64,9 @@ class Expander:
       return [ str(ipaddress.IPv4Address(ipadd)) for ipadd in range(int(ipaddress.IPv4Address('.'.join(first))), int(ipaddress.IPv4Address('.'.join(last))))]
     return [rangeAddr]
 
-
   def _prepareOutput(self):
     self.ports = self._expandPort(self.ports)
     self.address = self._expandAddr(self.address)
-
 
   def giveBack(self):
     self._prepareOutput()
