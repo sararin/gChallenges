@@ -1,4 +1,5 @@
 import sys
+import ipaddress
 import socket
 
 class Porter:
@@ -13,14 +14,12 @@ class Porter:
 
   def _checkPort(self, addr, prt):
     try:
-      sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      sock.settimeout(3)
-      result = sock.connect_ex((addr, prt))
-      if result == 0:
-        print(prt, "open")
-      else:
-        print(prt, "closed")
-      sock.close()
+      with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(3)
+        result = sock.connect_ex((addr, prt))
+        if result == 0:
+          print(prt, "open")
+        sock.close()
     except socket.gaierror:
       print("Hostname couldn't be resolved")
       sys.exit()
@@ -31,9 +30,19 @@ class Porter:
 class Expander:
   def __init__(self, address, ports):
     self.address = [address]
-    self.ports = [int(ports)]
+    self.ports = ports
+
+  def _expand(self, thingToExpand):
+    if "-" in thingToExpand:
+      temp = tuple(thingToExpand.split('-'))
+      return list(range(int(temp[0]), int(temp[1])))
+    return thingToExpand
+
+  def _prepareOutput(self):
+    self.ports = self._expand(self.ports)
 
   def giveBack(self):
+    self._prepareOutput()
     return (self.address, self.ports)
 
 if __name__ == "__main__":
