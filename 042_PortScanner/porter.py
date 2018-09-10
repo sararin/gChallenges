@@ -1,24 +1,24 @@
+#implement queue threading
 import sys
 import ipaddress
 import socket
-from threading import Thread
+import concurrent.futures
 
 class Porter:
   def __init__(self, addressPorts):
     self.address = addressPorts[0]
     self.ports = addressPorts[1]
+    self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=512)
     self.threads = []
     self.countOpen = {}
 
   def runScan(self):
     for addr in self.address:
       for prt in self.ports:
-        t = Thread(target=self._checkPort, args=(addr, prt,))
-        self.threads.append(t)
-        t.start()
-    [x.join() for x in self.threads]
+        self.pool.submit(self._checkPort, addr, prt)
+    self.pool.shutdown(wait=True)
     self._showResults()
-
+    
   def _checkPort(self, addr, prt):
     try:
       with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -28,10 +28,8 @@ class Porter:
           self._addToOpenDict((addr, prt))
     except socket.gaierror:
       print("Hostname couldn't be resolved")
-      sys.exit()
     except socket.error:
-      print("Couldn't connect to server")
-      sys.exit()
+      print(prt, "Couldn't connect to server")
 
   def _showResults(self):
     for key, val in self.countOpen.items():
