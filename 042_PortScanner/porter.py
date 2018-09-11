@@ -1,14 +1,15 @@
 #implement queue threading
-import sys
 import ipaddress
 import socket
 import concurrent.futures
+import argparse
 
 class Porter:
-  def __init__(self, addressPorts):
+  def __init__(self, addressPorts, numOfWorkers, connTimeout):
     self.address = addressPorts[0]
     self.ports = addressPorts[1]
-    self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=512)
+    self.connTimeout = connTimeout
+    self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=numOfWorkers)
     self.threads = []
     self.countOpen = {}
 
@@ -22,7 +23,7 @@ class Porter:
   def _checkPort(self, addr, prt):
     try:
       with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.settimeout(3)
+        sock.settimeout(self.connTimeout)
         result = sock.connect_ex((addr, prt))
         if result == 0:
           self._addToOpenDict((addr, prt))
@@ -71,7 +72,13 @@ class Expander:
     return (self.address, self.ports)
 
 if __name__ == "__main__":
-  exp = Expander(sys.argv[1], sys.argv[2])
-  port = Porter(exp.giveBack())
+  parser = argparse.ArgumentParser()
+  parser.add_argument('ipaddress', type=str, help="iprange you want to check")
+  parser.add_argument('ports', type=str, help="ports you want to scan")
+  parser.add_argument('-w', '--workers', type=int, default=512, help="number of workers, default 512")
+  parser.add_argument('-t', '--timeout', type=int, default=3, help="seconds till timeout, default 3")
+  args = parser.parse_args()
+  exp = Expander(args.ipaddress, args.ports)
+  port = Porter(exp.giveBack(), args.workers, args.timeout)
   port.runScan()
 
